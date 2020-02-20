@@ -18,7 +18,7 @@ def datetime_to_epoch(_datetime: datetime.datetime) -> int:
 
 
 def generate_hmac_signature():
-    """Returns a tuple with the authorization_time string correctly formatted along with the signature to
+    """Returns a tuple with the authorization_time string along with the signature to
     pass in the headers """
 
     authorization_time = datetime.datetime.now().strftime('%Y%m%dT%H%M%S%z')
@@ -38,9 +38,11 @@ def get_headers(authorization_time: str, signature: str) -> dict:
 def get_events(start: int, end: int = None) -> None:
     """Consumes Activation Events API.
     Receives start and end timestamps in epoch milliseconds.
+    Creates one file per every 30days interval contained in the range.
     """
 
     # If no `end` is passed, we assume now() but with a delta of 3 hours for delay.
+    # TODO: add validation for end less than 3 hours after now
     if end is None:
         end = datetime_to_epoch(datetime.datetime.now() - datetime.timedelta(hours=3))
 
@@ -50,6 +52,7 @@ def get_events(start: int, end: int = None) -> None:
     # Generate tuples with ranges spaced by maximum window of 30 days. We then can send a request for each tuple
     ranges = [(n, min(n + start, end)) for n in range(start, end, 2592000000)]
 
+    # TODO: use `activatedBeforeTimestamp` from response for any new request instead of ranges. Just add step every time. Use a different branch
     for r in ranges:
         page = 0
         authorization_time, signature = generate_hmac_signature()
@@ -59,10 +62,13 @@ def get_events(start: int, end: int = None) -> None:
         }
 
         headers = get_headers(authorization_time, signature)
-        print(headers)
+
+        # Make initial request, no page and no `next` string in the url
+        # TODO: validate errors
         req = requests.get(f'{API_URL}', params=payload, headers=headers)
 
         # Only create a file if there are activationEvents in the response
+        # The format of the file is `start`-`end`-`page`.json`
         if 'activationEvents' in req.json() and len(req.json()['activationEvents']) > 0:
             with open(f'{r[0]}-{r[1]}-page{page}.json', 'w') as f:
                 json.dump(req.json()['activationEvents'], f)
@@ -73,9 +79,10 @@ def get_events(start: int, end: int = None) -> None:
             _next = req.json()['next']
             authorization_time, signature = generate_hmac_signature()
             headers = get_headers(authorization_time, signature)
+
+            # Make request using `next` string for the query params
             req = requests.get(f'{API_URL}?{_next}', headers=headers)
 
-            # Only create a file if there are activationEvents in the response
             if 'activationEvents' in req.json() and len(req.json()['activationEvents']) > 0:
                 with open(f'{r[0]}-{r[1]}-page{page}.json', 'w') as f:
                     json.dump(req.json()['activationEvents'], f)
