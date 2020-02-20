@@ -30,6 +30,7 @@ class APIService:
             raise Exception("End date must be greater than start date")
 
         # Generate tuples with ranges spaced by maximum window of 30 days. We then can send a request for each tuple
+        # Can run in parallel depending on the throttling per client
         ranges = [(n, min(n + start, end)) for n in range(start, end, 2592000000)]
 
         for r in ranges:
@@ -45,7 +46,7 @@ class APIService:
             }
 
             # Make initial request, no page and no `next` string in the url
-            # TODO: validate errors
+            # TODO: validate errors. Verify status codes
             req = requests.get(f'{API_URL}', params=payload, headers=headers)
 
             # Only create a file if there are activationEvents in the response
