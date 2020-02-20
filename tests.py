@@ -1,7 +1,8 @@
-from main import get_events, API_URL
+from main import get_events, API_URL, datetime_to_epoch
 import pytest
 import responses
 import os
+import datetime
 
 
 class Tests:
@@ -13,6 +14,14 @@ class Tests:
         with pytest.raises(Exception) as e:
             get_events(start, end)
         assert "End date must be greater than start date" == str(e.value)
+
+    def test_end_is_greater_than_three_hours_back_from_now_raises_error(self):
+        start = 1577901600000
+        end = datetime_to_epoch(datetime.datetime.now() - datetime.timedelta(hours=1))
+
+        with pytest.raises(Exception) as e:
+            get_events(start, end)
+        assert "End datetime must be less than three hours back from now" == str(e.value)
 
     @responses.activate
     def test_response_with_no_next(self):

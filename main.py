@@ -42,9 +42,12 @@ def get_events(start: int, end: int = None) -> None:
     """
 
     # If no `end` is passed, we assume now() but with a delta of 3 hours for delay.
-    # TODO: add validation for end less than 3 hours after now
+    max_end = datetime_to_epoch(datetime.datetime.now() - datetime.timedelta(hours=3))
     if end is None:
-        end = datetime_to_epoch(datetime.datetime.now() - datetime.timedelta(hours=3))
+        end = max_end
+
+    if end is not None and end > max_end:
+        raise Exception("End datetime must be less than three hours back from now")
 
     if start > end:
         raise Exception("End date must be greater than start date")
@@ -52,7 +55,6 @@ def get_events(start: int, end: int = None) -> None:
     # Generate tuples with ranges spaced by maximum window of 30 days. We then can send a request for each tuple
     ranges = [(n, min(n + start, end)) for n in range(start, end, 2592000000)]
 
-    # TODO: use `activatedBeforeTimestamp` from response for any new request instead of ranges. Just add step every time. Use a different branch
     for r in ranges:
         page = 0
         authorization_time, signature = generate_hmac_signature()
