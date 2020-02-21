@@ -28,7 +28,23 @@ CREDENTIAL=<PARTNER>
 HMAC_KEY=<SECRET_KEY>
 ```
 
-Set the `API_URL` variable and now you can use the `get_events()` method from `main.py`.
+Set the `API_URL` variable in `api_service.py`.
+
+To fetch the events between 2 timestamps in epoch milliseconds:
+
+```python
+from api_service import APIService
+
+
+service = APIService()
+after = 1580521757000
+end = 1581299357000
+
+service.get_events(after, end)
+```
+
+This will generate one file per every maximum window range (30 days) and
+for every page.
 
 ## Run tests
 
