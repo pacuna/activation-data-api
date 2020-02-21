@@ -38,9 +38,9 @@ from api_service import APIService
 
 service = APIService()
 after = 1580521757000
-end = 1581299357000
+before = 1581299357000
 
-service.get_events(after, end)
+service.get_events(after, before)
 ```
 
 This will generate one file per every maximum window range (30 days) and
