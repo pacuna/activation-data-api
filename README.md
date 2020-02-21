@@ -35,12 +35,3 @@ Set the `API_URL` variable and now you can use the `get_events()` method from `m
 ```bash
 python -m pytest tests.py
 ```
-
-## Recommendations
-
-- Catch requests errors.
-- Extract common methods to a library to avoid duplication.
-- Don't manage sensitive data in the code. Use other mechanism such as environmental variables.
-- Use mock responses of the API to test your code
-- Propagate the status code responses from the API to inspect results and errors.
-

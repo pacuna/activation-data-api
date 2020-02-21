@@ -2,6 +2,7 @@ import pytest
 import responses
 import os
 import datetime
+import json
 from api_service import APIService, API_URL
 from utils import datetime_to_epoch
 
@@ -142,3 +143,24 @@ class TestApiService:
         assert os.path.exists(f'{start}-{end}-1.json')
         os.remove(f'{start}-{end}-0.json')
         os.remove(f'{start}-{end}-1.json')
+
+    @responses.activate
+    def test_response_is_not_200(self):
+        service = APIService()
+        start = 1546369200000
+        end = 1546376400000
+        response = {
+            "responseStatus": {
+                "httpStatusCode": 400,
+                "errorCode": "BadPageValue",
+                "description": "The page value provided is not valid."
+            }
+        }
+        responses.add(
+            method='GET',
+            url=API_URL,
+            json=response,
+            status=400
+        )
+        assert service.get_events(start, end) == response['responseStatus']
+
